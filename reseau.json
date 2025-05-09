@@ -1,0 +1,21 @@
+{
+    "nodes": [
+      {"id": "1", "label": "Logique D ordre 1"},
+      {"id": "2", "label": "Systeme S5"},
+      {"id": "3", "label": "Logique Modale"},
+      {"id": "4", "label": "Logique Temporelle"},
+      {"id": "5", "label": "Logique Classique"},
+      {"id": "6", "label": "Systeme K"},
+      {"id": "7", "label": "Systeme KD45"}
+    ],
+    "edges": [
+      {"from": "1", "to": "2", "label": "is a", "edge_type": "default"},
+      {"from": "2", "to": "3", "label": "is a", "edge_type": "default"},
+      {"from": "4", "to": "3", "label": "is a", "edge_type": "default"},
+      {"from": "3", "to": "5", "label": "derived_from", "edge_type": "dashed"},
+      {"from": "6", "to": "3", "label": "is a", "edge_type": "default"},
+      {"from": "7", "to": "3", "label": "is a", "edge_type": "default"},
+      {"from": "2", "to": "7", "label": "related_to", "edge_type": "dotted"},
+      {"from": "6", "to": "1", "label": "extends", "edge_type": "thick"}
+    ]
+}
