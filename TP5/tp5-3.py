@@ -34,6 +34,10 @@ def afficher_reseau(reseau):
         for exemple in exemples:
             print(f"    {exemple}")
 
+def est_exception(arc):
+    """Déterminer si un arc représente une exception (vérifie edge_type et label)"""
+    return arc.get("edge_type") == "exception" or arc["label"] == "exception"
+
 def visualiser_reseau_avec_exceptions(reseau):
     """Visualise le réseau sémantique avec matplotlib et networkx en mettant en évidence les exceptions"""
     # Créer un graphe dirigé
@@ -43,9 +47,11 @@ def visualiser_reseau_avec_exceptions(reseau):
     for noeud in reseau["nodes"]:
         G.add_node(noeud["id"], label=noeud["label"])
     
-    # Ajouter les arêtes avec leurs labels
+    # Ajouter les arêtes avec leurs labels et types
     for arc in reseau["edges"]:
-        G.add_edge(arc["from"], arc["to"], label=arc["label"])
+        G.add_edge(arc["from"], arc["to"], 
+                  label=arc["label"], 
+                  edge_type=arc.get("edge_type", "default"))
     
     # Créer la figure
     plt.figure(figsize=(12, 10))
@@ -61,8 +67,15 @@ def visualiser_reseau_avec_exceptions(reseau):
     nx.draw_networkx_labels(G, pos, labels=labels_noeuds, font_size=10)
     
     # Séparer les arêtes normales et les exceptions
-    edges_normal = [(u, v) for u, v in G.edges() if G.edges[u, v]['label'] != "exception"]
-    edges_exception = [(u, v) for u, v in G.edges() if G.edges[u, v]['label'] == "exception"]
+    edges_normal = []
+    edges_exception = []
+    
+    for u, v in G.edges():
+        edge_data = G.edges[u, v]
+        if edge_data.get("edge_type") == "exception" or edge_data["label"] == "exception":
+            edges_exception.append((u, v))
+        else:
+            edges_normal.append((u, v))
     
     # Dessiner les arêtes normales
     nx.draw_networkx_edges(G, pos, edgelist=edges_normal, width=1.0, alpha=0.7, 
@@ -96,34 +109,7 @@ def visualiser_reseau_avec_exceptions(reseau):
     # Afficher le graphe
     plt.show()
 
-def ajouter_exception(reseau, noeud_source, noeud_cible):
-    """Ajoute une relation d'exception entre deux nœuds"""
-    noeuds = reseau["nodes"]
-    
-    source = next((n for n in noeuds if n["label"] == noeud_source), None)
-    cible = next((n for n in noeuds if n["label"] == noeud_cible), None)
-    
-    if not source or not cible:
-        print(f"Erreur: Un des nœuds spécifiés n'existe pas dans le réseau.")
-        return reseau
-    
-    # Vérifier si l'exception existe déjà
-    if any(arc["from"] == source["id"] and arc["to"] == cible["id"] and arc["label"] == "exception" 
-           for arc in reseau["edges"]):
-        print(f"L'exception entre {noeud_source} et {noeud_cible} existe déjà.")
-        return reseau
-    
-    # Ajouter la nouvelle exception
-    reseau["edges"].append({
-        "from": source["id"],
-        "to": cible["id"],
-        "label": "exception"
-    })
-    
-    print(f"Exception ajoutée: {noeud_source} → {noeud_cible}")
-    return reseau
-
-def propagation_avec_exceptions(reseau, noeuds_source, noeuds_cible, relation_visee, relations_a_suivre=None, relation_exception="exception"):
+def propagation_avec_exceptions(reseau, noeuds_source, noeuds_cible, relation_visee, relations_a_suivre=None):
     """
     Algorithme de propagation qui tient compte des liens d'exception.
     
@@ -133,35 +119,45 @@ def propagation_avec_exceptions(reseau, noeuds_source, noeuds_cible, relation_vi
         noeuds_cible: Liste des nœuds cible
         relation_visee: Relation à vérifier
         relations_a_suivre: Relations à suivre lors de la propagation
-        relation_exception: Label de la relation d'exception
         
     Returns:
         Liste des résultats de propagation en tenant compte des exceptions
     """
+# def propagation_avec_exceptions(reseau, noeuds_source, noeuds_cible, relation_visee, relations_a_suivre=None):
     noeuds = reseau["nodes"]
     arcs = reseau["edges"]
     
     if relations_a_suivre is None:
-        relations_a_suivre = ["is a"]  # Par défaut, suit uniquement les relations "is a"
+        relations_a_suivre = ["est un"]
 
     resultats = []
 
-    for i in range(len(noeuds_source)):
+    for i in range(min(len(noeuds_source), len(noeuds_cible))):
+        # Trouver le nœud source par son label
+        # M1 = next((n for n in noeuds if n["label"] == noeuds_source[i]), None)
+        
+        # # Trouver le nœud cible par son label ou son ID
+        # M2 = next((n for n in noeuds if n["label"] == noeuds_cible[i] or n["id"] == noeuds_cible[i]), None)
+        # Trouver le nœud source par son label
         M1 = next((n for n in noeuds if n["label"] == noeuds_source[i]), None)
-        M2 = next((n for n in noeuds if n["label"] == noeuds_cible[i]), None)
+
+# Trouver le nœud cible par son label ou son ID
+        M2 = next((n for n in noeuds if n["label"] == noeuds_cible[i] or n["id"] == noeuds_cible[i]), None)
 
         if not M1 or not M2:
             resultats.append(f"[✖] {noeuds_source[i]} ou {noeuds_cible[i]} n'existe pas dans le réseau.")
             continue
+        
+        # Le reste de la fonction reste inchangé...
 
         # Vérifier d'abord s'il existe une exception directe
         exception_directe = any(
-            arc["from"] == M1["id"] and arc["to"] == M2["id"] and arc["label"] == relation_exception 
+            arc["from"] == M1["id"] and arc["to"] == M2["id"] and est_exception(arc)
             for arc in arcs
         )
         
         if exception_directe:
-            resultats.append(f"[✖] Exception directe: {noeuds_source[i]} ne peut pas être relié à {noeuds_cible[i]} ({relation_visee})")
+            resultats.append(f"[✖] Exception directe: {noeuds_source[i]} ne peut pas faire {noeuds_cible[i]} ({relation_visee})")
             continue
         
         # Structure pour la traversée du réseau
@@ -181,7 +177,7 @@ def propagation_avec_exceptions(reseau, noeuds_source, noeuds_cible, relation_vi
             
             # Vérifier si le nœud courant a une exception pour ce type de relation avec la cible
             a_exception = any(
-                arc["from"] == courant_id and arc["to"] == M2["id"] and arc["label"] == relation_exception
+                arc["from"] == courant_id and arc["to"] == M2["id"] and est_exception(arc)
                 for arc in arcs
             )
             
@@ -200,12 +196,12 @@ def propagation_avec_exceptions(reseau, noeuds_source, noeuds_cible, relation_vi
                     noeud_actuel_id = courant_id
                     while not exception_existe:
                         # Vérifier l'exception directe pour ce nœud
-                        if any(a["from"] == noeud_actuel_id and a["to"] == M2["id"] and a["label"] == relation_exception for a in arcs):
+                        if any(a["from"] == noeud_actuel_id and a["to"] == M2["id"] and est_exception(a) for a in arcs):
                             exception_existe = True
                             break
                         
                         # Remonter aux parents s'il y en a
-                        parents = [a["to"] for a in arcs if a["from"] == noeud_actuel_id and a["label"] == "is a"]
+                        parents = [a["to"] for a in arcs if a["from"] == noeud_actuel_id and a["label"] == "est un"]
                         if not parents:
                             break
                         
@@ -235,62 +231,118 @@ def propagation_avec_exceptions(reseau, noeuds_source, noeuds_cible, relation_vi
             resultats.append(message)
             
     return resultats
-
 if __name__ == "__main__":
     print("=== ALGORITHME DE PROPAGATION AVEC EXCEPTIONS ===")
     
     try:
-        nom_fichier = "reseau.json"
+        nom_fichier = "reseau-ois-pin.json"
         reseau = charger_reseau_syntaxique(nom_fichier)
         
         # Afficher la structure du réseau
         afficher_reseau(reseau)
         
-        # Ajouter des exceptions au réseau pour les tests
-        print("\n=== AJOUT D'EXCEPTIONS AU RÉSEAU ===")
-        reseau = ajouter_exception(reseau, "Logique D ordre 1", "Systeme S5")
-        reseau = ajouter_exception(reseau, "Logique Modale", "Logique Classique")
-        
-        # Afficher le réseau avec les exceptions
-        print("\n=== STRUCTURE DU RÉSEAU AVEC EXCEPTIONS ===")
-        relations_exceptions = [arc for arc in reseau["edges"] if arc["label"] == "exception"]
-        for arc in relations_exceptions:
+        # Afficher les exceptions existantes dans le réseau
+        print("\n=== EXCEPTIONS DÉJÀ PRÉSENTES DANS LE RÉSEAU ===")
+        exceptions_existantes = [arc for arc in reseau["edges"] if est_exception(arc)]
+        for arc in exceptions_existantes:
             de_label = obtenir_label(arc["from"], reseau["nodes"])
             vers_label = obtenir_label(arc["to"], reseau["nodes"])
-            print(f"  Exception: {de_label} → {vers_label}")
+            print(f"  Exception: {de_label} → {vers_label} ({arc['label']})")
         
         print("\n=== DÉMONSTRATION DE PROPAGATION AVEC EXCEPTIONS ===")
         
-        # Test 1: Vérifier une relation directe avec exception
-        print("\n1. Vérification avec exception directe:")
-        concepts1 = ["Logique D ordre 1"]
-        concepts2 = ["Systeme S5"]
-        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "is a", ["is a"])
+        # Test: Vérifier la relation d'exception entre Pigeon et Oiseau
+        print("\n1. Vérification de la relation d'exception entre Pigeon et Oiseau:")
+        concepts1 = ["Pigeon"]
+        concepts2 = ["Oiseau"]
+        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "ne vole pas", ["est un"])
         for ligne in resultats:
             print(ligne)
         
-        # Test 2: Vérifier une relation sans exception
-        print("\n2. Vérification sans exception:")
-        concepts1 = ["Systeme S5"]
-        concepts2 = ["Logique Modale"]
-        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "is a", ["is a"])
-        for ligne in resultats:
-            print(ligne)
-        
-        # Test 3: Vérifier une relation avec exception indirecte
-        print("\n3. Vérification avec exception indirecte:")
-        concepts1 = ["Systeme K"]
-        concepts2 = ["Logique Classique"]
-        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "derived_from", ["is a", "derived_from"])
-        for ligne in resultats:
-            print(ligne)
-            
         # Visualiser le réseau avec les exceptions
         print("\nAffichage de la visualisation graphique du réseau avec exceptions...")
         visualiser_reseau_avec_exceptions(reseau)
         
     except FileNotFoundError:
-        print(f"Erreur: Le fichier 'reseau.json' n'a pas été trouvé.")
+        print(f"Erreur: Le fichier JSON n'a pas été trouvé.")
+    except json.JSONDecodeError:
+        print(f"Erreur: Le fichier JSON n'est pas correctement formaté.")
+    except Exception as e:
+        print(f"Erreur: {str(e)}")
+# if __name__ == "__main__":
+    print("=== ALGORITHME DE PROPAGATION AVEC EXCEPTIONS ===")
+    
+    try:
+        nom_fichier = "reseau-exec.json"
+        reseau = charger_reseau_syntaxique(nom_fichier)
+        
+        # Afficher la structure du réseau
+        afficher_reseau(reseau)
+        
+        # Afficher les exceptions existantes dans le réseau
+        print("\n=== EXCEPTIONS DÉJÀ PRÉSENTES DANS LE RÉSEAU ===")
+        exceptions_existantes = [arc for arc in reseau["edges"] if est_exception(arc)]
+        for arc in exceptions_existantes:
+            de_label = obtenir_label(arc["from"], reseau["nodes"])
+            vers_label = obtenir_label(arc["to"], reseau["nodes"])
+            print(f"  Exception: {de_label} → {vers_label} ({arc['label']})")
+        
+        print("\n=== DÉMONSTRATION DE PROPAGATION AVEC EXCEPTIONS ===")
+        
+        # Test 1: Vérifier la capacité de vol des oiseaux (cas général)
+        print("\n1. Vérification de la capacité de vol des oiseaux en général:")
+        concepts1 = ["Oiseau"]
+        concepts2 = ["vol"]
+        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "peut faire", ["est un"])
+        for ligne in resultats:
+            print(ligne)
+        
+        # Test 2: Vérifier la capacité de vol d'un moineau spécifique (héritage normal)
+        print("\n2. Vérification de la capacité de vol d'un moineau:")
+        concepts1 = ["Moineau"]
+        concepts2 = ["vol"]
+        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "peut faire", ["est un"])
+        for ligne in resultats:
+            print(ligne)
+        
+        # Test 3: Vérifier la capacité de vol d'un pingouin (exception)
+        print("\n3. Vérification de la capacité de vol d'un pingouin:")
+        concepts1 = ["Pingouin"]
+        concepts2 = ["vol"]
+        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "peut faire", ["est un"])
+        for ligne in resultats:
+            print(ligne)
+            
+        # Test 4: Vérifier la capacité de pondre des œufs pour le pingouin (héritage malgré l'exception sur le vol)
+        print("\n4. Vérification de la capacité de pondre des œufs d'un pingouin:")
+        concepts1 = ["Pingouin"]
+        concepts2 = ["pond"]
+        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "peut faire", ["est un"])
+        for ligne in resultats:
+            print(ligne)
+            
+        # Test 5: Vérifier la capacité de marcher d'un mammifère
+        print("\n5. Vérification de la capacité de marcher d'un mammifère:")
+        concepts1 = ["Mammifère"]
+        concepts2 = ["marche"]
+        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "peut faire", ["est un"])
+        for ligne in resultats:
+            print(ligne)
+        
+        # Test 6: Vérifier la capacité de marcher d'un chien (héritage de mammifère)
+        print("\n6. Vérification de la capacité de marcher d'un chien:")
+        concepts1 = ["Chien"]
+        concepts2 = ["marche"]
+        resultats = propagation_avec_exceptions(reseau, concepts1, concepts2, "peut faire", ["est un"])
+        for ligne in resultats:
+            print(ligne)
+        
+        # Visualiser le réseau avec les exceptions
+        print("\nAffichage de la visualisation graphique du réseau avec exceptions...")
+        visualiser_reseau_avec_exceptions(reseau)
+        
+    except FileNotFoundError:
+        print(f"Erreur: Le fichier 'reseau-exec.json' n'a pas été trouvé.")
     except json.JSONDecodeError:
         print(f"Erreur: Le fichier JSON n'est pas correctement formaté.")
     except Exception as e:

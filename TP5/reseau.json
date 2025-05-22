@@ -1,21 +1,25 @@
 {
-    "nodes": [
-      {"id": "1", "label": "Logique D ordre 1"},
-      {"id": "2", "label": "Systeme S5"},
-      {"id": "3", "label": "Logique Modale"},
-      {"id": "4", "label": "Logique Temporelle"},
-      {"id": "5", "label": "Logique Classique"},
-      {"id": "6", "label": "Systeme K"},
-      {"id": "7", "label": "Systeme KD45"}
-    ],
-    "edges": [
-      {"from": "1", "to": "2", "label": "is a", "edge_type": "default"},
-      {"from": "2", "to": "3", "label": "is a", "edge_type": "default"},
-      {"from": "4", "to": "3", "label": "is a", "edge_type": "default"},
-      {"from": "3", "to": "5", "label": "derived_from", "edge_type": "dashed"},
-      {"from": "6", "to": "3", "label": "is a", "edge_type": "default"},
-      {"from": "7", "to": "3", "label": "is a", "edge_type": "default"},
-      {"from": "2", "to": "7", "label": "related_to", "edge_type": "dotted"},
-      {"from": "6", "to": "1", "label": "extends", "edge_type": "thick"}
-    ]
+  "nodes": [
+    {"id": "1", "label": "Logique du premier ordre"},
+    {"id": "2", "label": "Système S5"},
+    {"id": "3", "label": "Logique modale"},
+    {"id": "4", "label": "Logique temporelle"},
+    {"id": "5", "label": "Logique classique"},
+    {"id": "6", "label": "Système K"},
+    {"id": "7", "label": "Système KD45"},
+    {"id": "8", "label": "Logique non classique"}
+  ],
+  "edges": [
+    {"from": "1", "to": "5", "label": "est une", "edge_type": "default"},
+    {"from": "3", "to": "8", "label": "est une", "edge_type": "default"},
+    {"from": "2", "to": "3", "label": "est un", "edge_type": "default"},
+    {"from": "4", "to": "3", "label": "est une", "edge_type": "default"},
+    {"from": "6", "to": "3", "label": "est un", "edge_type": "default"},
+    {"from": "7", "to": "3", "label": "est un", "edge_type": "default"},
+    {"from": "6", "to": "2", "label": "s'étend en", "edge_type": "default"},
+    {"from": "6", "to": "7", "label": "s'étend en", "edge_type": "default"},
+    {"from": "1", "to": "3", "label": "peut s'étendre à", "edge_type": "dotted"},
+    {"from": "5", "to": "8", "label": "différente de", "edge_type": "dotted"},
+    {"from": "3", "to": "5", "label": "traduisible en certaines conditions", "edge_type": "exception" }
+  ]
 }

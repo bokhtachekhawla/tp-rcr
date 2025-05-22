@@ -137,47 +137,6 @@ def exemple2():
         e.afficher(f"= {monde_et_ext.obtenir_fermeture()}")
         e.diminuer_indentation()
 
-def exemple_mohamed():
-    e = UtilLogique()
-    
-    # Monde initial : Mohamed est un garçon
-    monde = EnsembleMonde()
-    monde.ajouter_formule("garcon_mohamed")
-    
-    # Règle par défaut : les garçons aiment le foot
-    regle = RegleDefaut()
-    regle.definir_prerequis("garcon_mohamed")
-    regle.definir_justification("aime_foot_mohamed")
-    regle.definir_consequence("aime_foot_mohamed")
-    
-    # Ajout de la règle dans l'ensemble de règles
-    regles = EnsembleRegles()
-    regles.ajouter_regle(regle)
-    
-    # MAIS : on a une information factuelle qui contredit cela :
-    # Mohamed n'aime pas le foot
-    monde_conflit = monde.copier()
-    monde_conflit.ajouter_formule(f"{e.NON}aime_foot_mohamed")  # Using UtilLogique.NON for negation
-    
-    # Affichage du contexte
-    e.afficher(f"Monde initial :\n\t{monde}")
-    e.afficher(f"Règle par défaut :\n\t{regles}")
-    e.afficher(f"Monde avec contradiction :\n\t{monde_conflit}")
-    
-    e.afficher("Extensions possibles :")
-    e.augmenter_indentation()
-    
-    # Sans contradiction : applique la règle
-    ext1 = FBF(f"({monde.obtenir_monde()} & aime_foot_mohamed)")
-    e.afficher(f"Extension 1 (monde initial avec la règle appliquée): {ext1.obtenir_fermeture()}")
-
-    # Avec contradiction : la règle ne peut pas s'appliquer
-    ext2 = FBF(monde_conflit.obtenir_monde())
-    e.afficher(f"Extension 2 (monde avec contradiction): {ext2.obtenir_fermeture()}")
-
-    e.diminuer_indentation()
-
-
 def exo6():
     e = UtilLogique()
     
@@ -238,10 +197,6 @@ class FBF:
             return f"{self.formule} => {{oiseau_x, pingouin_x, ¬vole_x}}"
         elif "oiseau_x" in self.formule and "vole_x" in self.formule:
             return f"{self.formule} => {{oiseau_x, vole_x}}"
-        elif "garcon_mohamed" in self.formule and "aime_foot_mohamed" in self.formule:
-            return f"{self.formule} => {{garcon_mohamed, aime_foot_mohamed}}"
-        elif "garcon_mohamed" in self.formule and "¬aime_foot_mohamed" in self.formule:
-            return f"{self.formule} => {{garcon_mohamed, ¬aime_foot_mohamed}}"
         # Ajout pour l'exo6
         elif "a" in self.formule and "¬a" not in self.formule:
             return f"{self.formule} => {{a, Formule avec a}}"
@@ -281,7 +236,6 @@ class RaisonneurDefaut:
 if __name__ == "__main__":
     exemple2()
     print("\n" + "-"*50 + "\n")
-    exemple_mohamed()
     print("\n" + "-"*50 + "\n")
     exo6()
 # # Exécuter les exemples
