@@ -41,7 +41,6 @@ class SimpleMlReasoner:
         # Définir les faits de base
         self.prolog.assertz("p")
         self.prolog.assertz("q")
-        
         # Définir les règles modales
         self.prolog.assertz("possibility_of_p_and_q :- p, q")
         self.prolog.assertz("necessity_of_not_p_or_q :- not(p), q")
