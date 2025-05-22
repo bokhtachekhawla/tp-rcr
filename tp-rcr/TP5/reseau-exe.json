@@ -1,0 +1,14 @@
+ {
+  "nodes": [
+    { "id": "1", "label": "animal" },
+    { "id": "2", "label": "oiseau" },
+    { "id": "3", "label": "autruche" },
+    { "id": "4", "label": "peut voler" }
+  ],
+  "edges": [
+    { "from": "2", "to": "1", "label": "est un" },
+    { "from": "3", "to": "2", "label": "est un" },
+    { "from": "2", "to": "4", "label": "peut" },
+    { "from": "3", "to": "4", "label": "exception", "edge_type": "exception" }
+  ]
+}

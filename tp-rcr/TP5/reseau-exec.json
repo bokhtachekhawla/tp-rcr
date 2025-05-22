@@ -1,0 +1,24 @@
+{
+  "nodes": [
+    {"id": "1", "label": "Animal"},
+    {"id": "2", "label": "Oiseau"},
+    {"id": "3", "label": "Mammifère"},
+    {"id": "4", "label": "Pingouin"},
+    {"id": "5", "label": "Moineau"},
+    {"id": "6", "label": "Chien"},
+    {"id": "vol", "label": "Vol"},
+    {"id": "marche", "label": "Marche"},
+    {"id": "pond", "label": "Ponte d'œufs"}
+  ],
+  "edges": [
+    {"from": "2", "to": "1", "label": "est un", "edge_type": "default"},
+    {"from": "3", "to": "1", "label": "est un", "edge_type": "default"},
+    {"from": "4", "to": "2", "label": "est un", "edge_type": "default"},
+    {"from": "5", "to": "2", "label": "est un", "edge_type": "default"},
+    {"from": "6", "to": "3", "label": "est un", "edge_type": "default"},
+    {"from": "2", "to": "vol", "label": "peut faire", "edge_type": "default"},
+    {"from": "4", "to": "vol", "label": "peut faire", "edge_type": "exception"},
+    {"from": "3", "to": "marche", "label": "peut faire", "edge_type": "default"},
+    {"from": "2", "to": "pond", "label": "peut faire", "edge_type": "default"}
+  ]
+}
